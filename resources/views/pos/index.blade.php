@@ -759,7 +759,8 @@
                 <select id="customer-select" class="form-control">
                     <option value="">Pelanggan Umum (Walk-in)</option>
                     @foreach ($customers as $c)
-                        <option value="{{ $c->id }}">{{ $c->name }}{{ $c->phone ? ' (' . $c->phone . ')' : '' }}
+                        <option value="{{ $c->id }}">
+                            {{ $c->name }} [{{ $c->category ?? 'Umum' }}]{{ $c->phone ? ' (' . $c->phone . ')' : '' }}
                         </option>
                     @endforeach
                 </select>
@@ -826,14 +827,24 @@
                 <div class="payment-summary-value" id="modal-total">Rp 0</div>
             </div>
 
+            {{-- INPUT NOMOR INVOICE MANUAL --}}
+            <div class="form-group">
+                <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>No. Invoice Transaksi</span>
+                    <span style="font-weight:normal; font-size:11px; color:var(--text-muted);">(Opsional / Manual)</span>
+                </label>
+                <input type="text" id="manual-invoice" class="form-control font-mono" placeholder="Kosongkan untuk otomatis (cth: INV-...)">
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Biarkan kosong jika ingin sistem membuat no. invoice otomatis</div>
+            </div>
+
             <div class="form-group">
                 <label class="form-label">Metode Pembayaran</label>
                 <select id="payment-method" class="form-control" style="font-size:14px; font-weight:600;">
-                    <option value="cash">💵 Tunai (Cash)</option>
-                    <option value="transfer">🏦 Transfer Bank</option>
-                    <option value="qris">📱 QRIS</option>
-                    <option value="debit">💳 Kartu Debit</option>
-                    <option value="kredit">💳 Kartu Kredit</option>
+                    @foreach ($paymentMethods as $pm)
+                        <option value="{{ $pm->code }}" data-iscash="{{ $pm->is_cash ? '1' : '0' }}">
+                            {{ $pm->is_cash ? '💵' : '💳' }} {{ $pm->name }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
 
@@ -864,7 +875,8 @@
 
     {{-- MODAL SUKSES --}}
     <div class="modal-overlay" id="success-modal">
-        <div class="modal" style="text-align:center; max-width:440px;">
+        <div class="modal" style="text-align:center; max-width:440px; position:relative;">
+            <button type="button" class="modal-close-btn" id="close-success-x" style="position:absolute; right:16px; top:16px;" title="Tutup">&times;</button>
             <div
                 style="width:64px; height:64px; border-radius:50%; background:rgba(16,185,129,0.15); color:var(--success); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:32px; border:2px solid var(--success);">
                 ✓
@@ -1071,14 +1083,28 @@
         }
 
         // ===== CHECKOUT =====
+        function isCurrentPaymentCash() {
+            const select = document.getElementById('payment-method');
+            if (!select || select.selectedIndex < 0) return true;
+            const selectedOpt = select.options[select.selectedIndex];
+            return selectedOpt ? selectedOpt.dataset.iscash === '1' : (select.value === 'cash');
+        }
+
         document.getElementById('checkout-btn').addEventListener('click', () => {
             const total = getTotal();
             document.getElementById('modal-total').textContent = 'Rp ' + formatNumber(total);
             document.getElementById('payment-amount').value = '';
             document.getElementById('change-display').textContent = 'Rp 0';
             generateQuickAmounts(total);
+            document.getElementById('payment-method').dispatchEvent(new Event('change'));
             document.getElementById('payment-modal').classList.add('active');
-            setTimeout(() => document.getElementById('payment-amount').focus(), 150);
+            setTimeout(() => {
+                if (isCurrentPaymentCash()) {
+                    document.getElementById('payment-amount').focus();
+                } else {
+                    document.getElementById('manual-invoice').focus();
+                }
+            }, 150);
         });
 
         document.getElementById('cancel-payment').addEventListener('click', () => {
@@ -1126,22 +1152,25 @@
         });
 
         document.getElementById('payment-method').addEventListener('change', function() {
-            const isCash = this.value === 'cash';
+            const isCash = isCurrentPaymentCash();
             document.getElementById('cash-section').style.display = isCash ? 'block' : 'none';
         });
 
         document.getElementById('confirm-payment').addEventListener('click', async () => {
             const paymentMethod = document.getElementById('payment-method').value;
-            const paymentAmount = paymentMethod === 'cash' ?
-                parseFloat(document.getElementById('payment-amount').value) || 0 :
-                getTotal();
+            const isCash = isCurrentPaymentCash();
             const total = getTotal();
+            const paymentAmount = isCash ?
+                parseFloat(document.getElementById('payment-amount').value) || 0 :
+                total;
 
-            if (paymentMethod === 'cash' && paymentAmount < total) {
+            if (isCash && paymentAmount < total) {
                 alert('Jumlah bayar kurang dari total belanja!');
                 document.getElementById('payment-amount').focus();
                 return;
             }
+
+            const manualInvoice = document.getElementById('manual-invoice').value.trim();
 
             const btn = document.getElementById('confirm-payment');
             btn.disabled = true;
@@ -1152,9 +1181,11 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': CSRF_TOKEN
                     },
                     body: JSON.stringify({
+                        invoice_number: manualInvoice || null,
                         customer_id: document.getElementById('customer-select').value || null,
                         items: cart.map(i => ({
                             product_id: i.id,
@@ -1173,10 +1204,12 @@
                 if (data.success) {
                     currentTransactionId = data.transaction_id;
                     document.getElementById('payment-modal').classList.remove('active');
+                    document.getElementById('manual-invoice').value = '';
                     document.getElementById('success-invoice').textContent = 'Invoice: ' + data.invoice_number;
                     document.getElementById('success-modal').classList.add('active');
                 } else {
-                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan sistem'));
+                    const errorMsg = data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : 'Terjadi kesalahan sistem');
+                    alert('Gagal: ' + errorMsg);
                 }
             } catch (e) {
                 alert('Terjadi kesalahan jaringan atau server.');
@@ -1194,12 +1227,21 @@
             }
         });
 
-        document.getElementById('new-transaction').addEventListener('click', () => {
+        function closeSuccessModalAndReset() {
             document.getElementById('success-modal').classList.remove('active');
             cart = [];
+            document.getElementById('customer-select').value = '';
+            document.getElementById('manual-invoice').value = '';
             document.getElementById('discount-input').value = '';
             renderCart();
             fetchProducts(activeCategory);
+        }
+
+        document.getElementById('new-transaction').addEventListener('click', closeSuccessModalAndReset);
+        document.getElementById('close-success-x')?.addEventListener('click', closeSuccessModalAndReset);
+        document.getElementById('close-success-btn')?.addEventListener('click', closeSuccessModalAndReset);
+        document.getElementById('success-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeSuccessModalAndReset();
         });
 
         document.getElementById('clear-cart').addEventListener('click', () => {

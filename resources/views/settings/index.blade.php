@@ -96,12 +96,146 @@
             </div>
         </div>
 
-        {{-- TOMBOL SIMPAN --}}
-        <div style="display:flex; justify-content:flex-end; gap:12px; margin-bottom:40px;">
+        {{-- TOMBOL SIMPAN PENGATURAN UMUM --}}
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-bottom:28px;">
             <button type="submit" class="btn btn-primary btn-lg" style="padding:12px 28px;">
-                💾 Simpan Semua Pengaturan
+                💾 Simpan Konfigurasi Toko & Pajak
             </button>
         </div>
     </form>
+
+    {{-- SEKSI 4: MANAJEMEN METODE PEMBAYARAN --}}
+    <div class="card mb-6">
+        <div class="card-header">
+            <div class="card-title">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                <span>Daftar Metode Pembayaran</span>
+                <span class="badge badge-purple" style="margin-left:8px;">{{ $paymentMethods->count() }} Metode</span>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="openPaymentModal()">
+                + Tambah Metode
+            </button>
+        </div>
+        <div class="card-body" style="padding:0;">
+            <div class="table-container" style="border:none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:40px;">#</th>
+                            <th>Nama Metode</th>
+                            <th>Kode Sistem</th>
+                            <th>Tipe</th>
+                            <th>Status</th>
+                            <th style="text-align:right; width:180px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($paymentMethods as $index => $pm)
+                        <tr>
+                            <td class="text-muted">{{ $index + 1 }}</td>
+                            <td>
+                                <div style="font-weight:700; color:var(--text-primary);">{{ $pm->name }}</div>
+                            </td>
+                            <td>
+                                <code style="font-size:12px; background:var(--bg-elevated); padding:3px 8px; border-radius:4px; border:1px solid var(--border);">{{ $pm->code }}</code>
+                            </td>
+                            <td>
+                                @if($pm->is_cash)
+                                    <span class="badge" style="background:rgba(16, 185, 129, 0.15); color:var(--success); border:1px solid rgba(16, 185, 129, 0.3);">💵 Tunai</span>
+                                @else
+                                    <span class="badge" style="background:rgba(99, 102, 241, 0.15); color:#818cf8; border:1px solid rgba(99, 102, 241, 0.3);">💳 Non-Tunai</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($pm->is_active)
+                                    <span class="badge badge-success">✓ Aktif</span>
+                                @else
+                                    <span class="badge" style="background:rgba(239, 68, 68, 0.12); color:#f87171; border:1px solid rgba(239, 68, 68, 0.25);">✕ Nonaktif</span>
+                                @endif
+                            </td>
+                            <td style="text-align:right;">
+                                <div style="display:flex; justify-content:flex-end; gap:6px;">
+                                    <form action="{{ route('settings.payment-methods.toggle', $pm) }}" method="POST" style="display:inline;">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="btn btn-ghost btn-sm" title="{{ $pm->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                            {{ $pm->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                        </button>
+                                    </form>
+                                    @if($pm->code !== 'cash')
+                                    <form action="{{ route('settings.payment-methods.destroy', $pm) }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus metode pembayaran ini?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Hapus">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">
+                                Belum ada data metode pembayaran.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL TAMBAH METODE PEMBAYARAN --}}
+<div class="modal-overlay" id="payment-method-modal">
+    <div class="modal" style="max-width:480px;">
+        <div class="modal-header">
+            <div class="modal-title">+ Tambah Metode Pembayaran Baru</div>
+            <button type="button" class="modal-close-btn" onclick="closePaymentModal()">&times;</button>
+        </div>
+        <form action="{{ route('settings.payment-methods.store') }}" method="POST">
+            @csrf
+            <div class="form-group">
+                <label class="form-label">Nama Metode Pembayaran *</label>
+                <input type="text" name="name" class="form-control" placeholder="Contoh: ShopeePay, OVO, Transfer BCA" required autofocus>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">Nama ini akan muncul pada opsi pembayaran di kasir POS.</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Kode Singkat (Opsional)</label>
+                <input type="text" name="code" class="form-control font-mono" placeholder="Contoh: shopeepay (otomatis jika kosong)">
+            </div>
+
+            <div class="form-group" style="padding:14px; background:var(--bg-elevated); border-radius:var(--radius-md); border:1px solid var(--border);">
+                <label class="toggle-switch">
+                    <input type="checkbox" name="is_cash" value="1">
+                    <span class="toggle-slider"></span>
+                    <div>
+                        <div style="font-size:13px; font-weight:700; color:var(--text-primary);">Metode Pembayaran Tunai (Cash)</div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Jika dicentang, kasir akan meminta input nominal uang yang diterima dan menghitung kembalian.</div>
+                    </div>
+                </label>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button type="button" onclick="closePaymentModal()" class="btn btn-ghost">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Metode</button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function openPaymentModal() {
+    document.getElementById('payment-method-modal').classList.add('active');
+}
+function closePaymentModal() {
+    document.getElementById('payment-method-modal').classList.remove('active');
+}
+document.getElementById('payment-method-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) closePaymentModal();
+});
+</script>
+@endpush

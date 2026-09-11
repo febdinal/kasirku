@@ -21,15 +21,29 @@ class CustomerController extends Controller
             });
         }
 
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
         $customers = $query->paginate(20)->withQueryString();
 
-        return view('customers.index', compact('customers'));
+        $existingCategories = Customer::whereNotNull('category')->distinct()->pluck('category')->toArray();
+        $categories = array_values(array_unique(array_merge(Customer::PRESET_CATEGORIES, $existingCategories)));
+
+        return view('customers.index', compact('customers', 'categories'));
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $category = ($request->category === 'other' && $request->filled('category_custom'))
+            ? trim($request->category_custom)
+            : ($request->category ?? 'Umum');
+
+        $request->merge(['category' => $category]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'category' => ['required', 'string', 'max:50'],
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string'],
@@ -42,8 +56,15 @@ class CustomerController extends Controller
 
     public function update(Request $request, Customer $customer): RedirectResponse
     {
+        $category = ($request->category === 'other' && $request->filled('category_custom'))
+            ? trim($request->category_custom)
+            : ($request->category ?? 'Umum');
+
+        $request->merge(['category' => $category]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'category' => ['required', 'string', 'max:50'],
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string'],

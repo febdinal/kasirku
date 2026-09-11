@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\Transaction;
@@ -19,11 +20,12 @@ class PosController extends Controller
         $categories = Category::withCount(['products' => fn ($q) => $q->where('is_active', true)->where('stock', '>', 0)])->get();
         $allProductsCount = Product::where('is_active', true)->where('stock', '>', 0)->count();
         $customers = Customer::orderBy('name')->get();
+        $paymentMethods = PaymentMethod::active()->get();
         $ppnEnabled = Setting::get('ppn_enabled', '0') === '1';
         $ppnPercentage = (float) Setting::get('ppn_percentage', '0');
         $currencySymbol = Setting::get('currency_symbol', 'Rp');
 
-        return view('pos.index', compact('categories', 'allProductsCount', 'customers', 'ppnEnabled', 'ppnPercentage', 'currencySymbol'));
+        return view('pos.index', compact('categories', 'allProductsCount', 'customers', 'paymentMethods', 'ppnEnabled', 'ppnPercentage', 'currencySymbol'));
     }
 
     public function getProducts(Request $request): JsonResponse
@@ -52,13 +54,14 @@ class PosController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'invoice_number' => ['nullable', 'string', 'max:50', 'unique:transactions,invoice_number'],
             'customer_id' => ['nullable', 'exists:customers,id'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.price' => ['required', 'numeric', 'min:0'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
-            'payment_method' => ['required', 'in:cash,transfer,qris,debit,kredit'],
+            'payment_method' => ['required', 'string', 'max:50'],
             'payment_amount' => ['required', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
@@ -95,8 +98,12 @@ class PosController extends Controller
             $total = $taxableAmount + $taxAmount;
             $changeAmount = $validated['payment_amount'] - $total;
 
+            $invoiceNumber = ! empty($validated['invoice_number'])
+                ? trim($validated['invoice_number'])
+                : Transaction::generateInvoiceNumber();
+
             $transaction = Transaction::create([
-                'invoice_number' => Transaction::generateInvoiceNumber(),
+                'invoice_number' => $invoiceNumber,
                 'customer_id' => $validated['customer_id'] ?? null,
                 'user_id' => auth()->id(),
                 'subtotal' => $subtotal,

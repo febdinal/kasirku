@@ -13,6 +13,17 @@
 </style>
 @endpush
 
+@section('topbar-actions')
+    <div style="display:flex; gap:8px;">
+        <a href="{{ route('reports.export-excel', ['period_type' => 'monthly', 'month' => $month]) }}" class="btn btn-success btn-sm">
+            📥 Export Excel Bulan Ini
+        </a>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="openExportModal('monthly', '{{ $month }}')">
+            📊 Opsi Periode Lain
+        </button>
+    </div>
+@endsection
+
 @section('content')
 {{-- FILTER BULAN --}}
 <div class="filter-card">
@@ -24,6 +35,9 @@
         <div class="filter-actions" style="margin-bottom:1px;">
             <button type="submit" class="btn btn-primary">Tampilkan Laporan</button>
             <a href="{{ route('reports.monthly') }}" class="btn btn-ghost">Bulan Ini</a>
+            <a href="{{ route('reports.export-excel', ['period_type' => 'monthly', 'month' => $month]) }}" class="btn btn-success" style="margin-left:auto;">
+                📥 Export Excel (.xls)
+            </a>
         </div>
     </form>
 </div>
@@ -148,6 +162,8 @@
         </table>
     </div>
 </div>
+
+@include('reports._export_modal')
 @endsection
 
 @push('scripts')

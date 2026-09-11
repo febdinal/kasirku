@@ -12,7 +12,15 @@ class Customer extends Model
     /** @use HasFactory<CustomerFactory> */
     use HasFactory;
 
-    protected $fillable = ['name', 'phone', 'email', 'address'];
+    public const PRESET_CATEGORIES = [
+        'Umum',
+        'New Customer',
+        'Tetap',
+        'Loyal',
+        'Reseller',
+    ];
+
+    protected $fillable = ['name', 'category', 'phone', 'email', 'address'];
 
     public function transactions(): HasMany
     {

@@ -18,10 +18,16 @@
             <span class="badge badge-purple" style="margin-left:8px;">{{ $customers->total() }} total</span>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
-            <form method="GET" style="display:flex; gap:8px;">
-                <input type="text" name="search" class="form-control" style="width:240px; height:36px; font-size:13px;" placeholder="Cari nama / no. HP..." value="{{ request('search') }}">
+            <form method="GET" style="display:flex; gap:8px; align-items:center;">
+                <select name="category" class="form-control" style="width:160px; height:36px; font-size:13px;" onchange="this.form.submit()">
+                    <option value="">Semua Kategori</option>
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat }}" {{ request('category') === $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                    @endforeach
+                </select>
+                <input type="text" name="search" class="form-control" style="width:200px; height:36px; font-size:13px;" placeholder="Cari nama / HP..." value="{{ request('search') }}">
                 <button type="submit" class="btn btn-ghost btn-sm">Cari</button>
-                @if(request('search'))
+                @if(request('search') || request('category'))
                     <a href="{{ route('customers.index') }}" class="btn btn-ghost btn-sm">Reset</a>
                 @endif
             </form>
@@ -37,6 +43,7 @@
                 <tr>
                     <th style="width:50px;">#</th>
                     <th>Nama Pelanggan</th>
+                    <th>Kategori</th>
                     <th>Kontak (HP / Email)</th>
                     <th>Alamat</th>
                     <th style="text-align:center;">Total Transaksi</th>
@@ -52,6 +59,22 @@
                         <div style="font-size:11px; color:var(--text-muted);">ID: #{{ $customer->id }}</div>
                     </td>
                     <td>
+                        @php
+                            $cat = $customer->category ?? 'Umum';
+                            $badgeStyle = match($cat) {
+                                'New Customer' => 'background:rgba(16, 185, 129, 0.15); color:var(--success); border:1px solid rgba(16, 185, 129, 0.3);',
+                                'Tetap' => 'background:rgba(59, 130, 246, 0.15); color:#60a5fa; border:1px solid rgba(59, 130, 246, 0.3);',
+                                'Loyal' => 'background:rgba(168, 85, 247, 0.15); color:#c084fc; border:1px solid rgba(168, 85, 247, 0.3);',
+                                'Reseller' => 'background:rgba(245, 158, 11, 0.15); color:#fbbf24; border:1px solid rgba(245, 158, 11, 0.3);',
+                                'Umum' => 'background:rgba(148, 163, 184, 0.15); color:#94a3b8; border:1px solid rgba(148, 163, 184, 0.3);',
+                                default => 'background:rgba(20, 184, 166, 0.15); color:#2dd4bf; border:1px solid rgba(20, 184, 166, 0.3);',
+                            };
+                        @endphp
+                        <span class="badge" style="{{ $badgeStyle }} font-weight:600;">
+                            {{ $cat }}
+                        </span>
+                    </td>
+                    <td>
                         <div style="font-size:13px; font-weight:500;">{{ $customer->phone ?: '—' }}</div>
                         @if($customer->email)
                             <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">{{ $customer->email }}</div>
@@ -65,7 +88,7 @@
                     </td>
                     <td style="text-align:right;">
                         <div class="flex gap-2" style="justify-content:flex-end;">
-                            <button type="button" class="btn btn-ghost btn-sm" onclick="openCustEdit({{ $customer->id }}, '{{ addslashes($customer->name) }}', '{{ $customer->phone }}', '{{ $customer->email }}', '{{ addslashes($customer->address ?? '') }}')">
+                            <button type="button" class="btn btn-ghost btn-sm" onclick="openCustEdit({{ $customer->id }}, '{{ addslashes($customer->name) }}', '{{ addslashes($customer->category ?? 'Umum') }}', '{{ $customer->phone }}', '{{ $customer->email }}', '{{ addslashes($customer->address ?? '') }}')">
                                 Edit
                             </button>
                             <form action="{{ route('customers.destroy', $customer) }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus pelanggan ini?')">
@@ -77,7 +100,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" style="text-align:center; padding:50px; color:var(--text-muted);">
+                    <td colspan="7" style="text-align:center; padding:50px; color:var(--text-muted);">
                         <div style="font-size:32px; margin-bottom:8px; opacity:0.6;">👥</div>
                         <div style="font-weight:600;">Belum ada data pelanggan</div>
                         <div style="font-size:12px; margin-top:4px;">Klik "+ Tambah Pelanggan" untuk mendaftarkan pelanggan baru</div>
@@ -112,6 +135,25 @@
                 <input type="text" name="name" class="form-control" placeholder="Contoh: Budi Santoso" required autofocus>
                 @error('name')<div style="color:#fca5a5; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
             </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Kategori Pelanggan *</label>
+                    <select name="category" id="create-cust-category" class="form-control" onchange="toggleCustomCategory('create', this.value)" required>
+                        <option value="Umum">Umum</option>
+                        <option value="New Customer">New Customer</option>
+                        <option value="Tetap">Tetap</option>
+                        <option value="Loyal">Loyal</option>
+                        <option value="Reseller">Reseller</option>
+                        <option value="other">+ Kategori Lain...</option>
+                    </select>
+                </div>
+                <div class="form-group" id="create-custom-category-group" style="display:none;">
+                    <label class="form-label">Nama Kategori Baru *</label>
+                    <input type="text" name="category_custom" id="create-cust-category-custom" class="form-control" placeholder="Contoh: VIP, Grosir">
+                </div>
+            </div>
+
             <div class="grid-2">
                 <div class="form-group">
                     <label class="form-label">No. Telepon / WhatsApp</label>
@@ -147,6 +189,25 @@
                 <label class="form-label">Nama Lengkap *</label>
                 <input type="text" name="name" id="cedit-name" class="form-control" required>
             </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Kategori Pelanggan *</label>
+                    <select name="category" id="cedit-category" class="form-control" onchange="toggleCustomCategory('edit', this.value)" required>
+                        <option value="Umum">Umum</option>
+                        <option value="New Customer">New Customer</option>
+                        <option value="Tetap">Tetap</option>
+                        <option value="Loyal">Loyal</option>
+                        <option value="Reseller">Reseller</option>
+                        <option value="other">+ Kategori Lain...</option>
+                    </select>
+                </div>
+                <div class="form-group" id="edit-custom-category-group" style="display:none;">
+                    <label class="form-label">Nama Kategori Kustom</label>
+                    <input type="text" name="category_custom" id="cedit-category-custom" class="form-control" placeholder="Nama kategori...">
+                </div>
+            </div>
+
             <div class="grid-2">
                 <div class="form-group">
                     <label class="form-label">No. Telepon</label>
@@ -172,19 +233,49 @@
 
 @push('scripts')
 <script>
+function toggleCustomCategory(mode, val) {
+    const customGroup = document.getElementById(mode === 'create' ? 'create-custom-category-group' : 'edit-custom-category-group');
+    const customInput = document.getElementById(mode === 'create' ? 'create-cust-category-custom' : 'cedit-category-custom');
+    if (val === 'other') {
+        customGroup.style.display = 'block';
+        customInput.required = true;
+        customInput.focus();
+    } else {
+        customGroup.style.display = 'none';
+        customInput.required = false;
+    }
+}
+
 function openCreateCustModal() {
+    document.getElementById('create-cust-category').value = 'Umum';
+    toggleCustomCategory('create', 'Umum');
     document.getElementById('create-cust-modal').classList.add('active');
 }
 function closeCreateCustModal() {
     document.getElementById('create-cust-modal').classList.remove('active');
 }
 
-function openCustEdit(id, name, phone, email, address) {
+const PRESET_CATS = ['Umum', 'New Customer', 'Tetap', 'Loyal', 'Reseller'];
+
+function openCustEdit(id, name, category, phone, email, address) {
     document.getElementById('cust-edit-form').action = '{{ route("customers.update", ":id") }}'.replace(':id', id);
     document.getElementById('cedit-name').value = name;
     document.getElementById('cedit-phone').value = phone || '';
     document.getElementById('cedit-email').value = email || '';
     document.getElementById('cedit-address').value = address || '';
+
+    const catSelect = document.getElementById('cedit-category');
+    const customInput = document.getElementById('cedit-category-custom');
+    if (PRESET_CATS.includes(category)) {
+        catSelect.value = category;
+        toggleCustomCategory('edit', category);
+        customInput.value = '';
+    } else {
+        catSelect.value = 'other';
+        toggleCustomCategory('edit', 'other');
+        customInput.value = category || '';
+    }
+
     document.getElementById('cust-edit-modal').classList.add('active');
 }
 function closeCustEditModal() {

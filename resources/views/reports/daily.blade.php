@@ -3,6 +3,17 @@
 @section('page-title', 'Laporan Penjualan Harian')
 @section('page-subtitle', 'Rekap transaksi dan performa penjualan per tanggal')
 
+@section('topbar-actions')
+    <div style="display:flex; gap:8px;">
+        <a href="{{ route('reports.export-excel', ['period_type' => 'daily', 'date' => $date]) }}" class="btn btn-success btn-sm">
+            📥 Export Excel Hari Ini
+        </a>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="openExportModal('daily', '{{ $date }}')">
+            📊 Opsi Periode Lain
+        </button>
+    </div>
+@endsection
+
 @section('content')
 {{-- FILTER TANGGAL --}}
 <div class="filter-card">
@@ -14,6 +25,9 @@
         <div class="filter-actions" style="margin-bottom:1px;">
             <button type="submit" class="btn btn-primary">Tampilkan</button>
             <a href="{{ route('reports.daily') }}" class="btn btn-ghost">Hari Ini</a>
+            <a href="{{ route('reports.export-excel', ['period_type' => 'daily', 'date' => $date]) }}" class="btn btn-success" style="margin-left:auto;">
+                📥 Export Excel (.xls)
+            </a>
         </div>
     </form>
 </div>
@@ -101,4 +115,6 @@
         </div>
     </div>
 </div>
+
+@include('reports._export_modal')
 @endsection

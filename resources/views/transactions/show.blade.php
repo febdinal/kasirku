@@ -122,7 +122,12 @@
                 </tr>
                 <tr>
                     <td style="padding:9px 0; color:var(--text-muted); font-size:13px;">Nama Pelanggan</td>
-                    <td style="padding:9px 0; font-size:13px;">{{ $transaction->customer?->name ?? 'Pelanggan Umum' }}</td>
+                    <td style="padding:9px 0; font-size:13px;">
+                        {{ $transaction->customer?->name ?? 'Pelanggan Umum' }}
+                        @if($transaction->customer?->category)
+                            <span class="badge" style="margin-left:6px; font-size:10px; background:rgba(99, 102, 241, 0.15); color:#818cf8; border:1px solid rgba(99, 102, 241, 0.3);">{{ $transaction->customer->category }}</span>
+                        @endif
+                    </td>
                 </tr>
                 <tr>
                     <td style="padding:9px 0; color:var(--text-muted); font-size:13px; {{ !$transaction->notes ? 'border-bottom:none;' : '' }}">Metode Pembayaran</td>

@@ -58,8 +58,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/laporan/harian', [ReportController::class, 'daily'])->name('reports.daily');
     Route::get('/laporan/bulanan', [ReportController::class, 'monthly'])->name('reports.monthly');
     Route::get('/laporan/laba-rugi', [ReportController::class, 'profit'])->name('reports.profit');
+    Route::get('/laporan/export-excel', [ReportController::class, 'exportExcel'])->name('reports.export-excel');
 
     // Pengaturan
     Route::get('/pengaturan', [SettingController::class, 'index'])->name('settings.index');
     Route::put('/pengaturan', [SettingController::class, 'update'])->name('settings.update');
+    Route::post('/pengaturan/metode-pembayaran', [SettingController::class, 'storePaymentMethod'])->name('settings.payment-methods.store');
+    Route::patch('/pengaturan/metode-pembayaran/{paymentMethod}/toggle', [SettingController::class, 'togglePaymentMethod'])->name('settings.payment-methods.toggle');
+    Route::delete('/pengaturan/metode-pembayaran/{paymentMethod}', [SettingController::class, 'destroyPaymentMethod'])->name('settings.payment-methods.destroy');
 });
