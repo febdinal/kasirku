@@ -14,6 +14,8 @@
             justify-content: center;
             padding: 20px;
             min-height: 100vh;
+            /* Pastikan teks tajam di layar */
+            -webkit-font-smoothing: antialiased;
         }
 
         .receipt {
@@ -23,6 +25,9 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             border-radius: 8px;
             position: relative;
+            /* Base: semua teks tebal & hitam agar cetak jelas */
+            font-weight: 600;
+            color: #111;
         }
 
         .receipt::before, .receipt::after {
@@ -47,33 +52,35 @@
             font-size: 22px;
             font-weight: 900;
             letter-spacing: 4px;
-            color: #1a1a2e;
+            color: #000;
             margin-bottom: 2px;
         }
 
         .store-tagline {
             text-align: center;
             font-size: 11px;
-            color: #666;
+            font-weight: 700;
+            color: #222;
             margin-bottom: 4px;
         }
 
         .store-info {
             text-align: center;
             font-size: 10px;
-            color: #888;
+            font-weight: 600;
+            color: #333;
             line-height: 1.6;
         }
 
         .divider {
             border: none;
-            border-top: 1px dashed #ccc;
+            border-top: 1px dashed #999;
             margin: 12px 0;
         }
 
         .divider-solid {
             border: none;
-            border-top: 1px solid #ccc;
+            border-top: 1.5px solid #888;
             margin: 12px 0;
         }
 
@@ -81,7 +88,8 @@
             display: flex;
             justify-content: space-between;
             font-size: 11px;
-            color: #333;
+            font-weight: 600;
+            color: #111;
             margin-bottom: 4px;
         }
 
@@ -93,15 +101,16 @@
 
         .item-name {
             font-size: 12px;
-            font-weight: bold;
-            color: #1a1a2e;
+            font-weight: 800;
+            color: #000;
         }
 
         .item-detail {
             display: flex;
             justify-content: space-between;
             font-size: 11px;
-            color: #555;
+            font-weight: 600;
+            color: #222;
             margin-top: 2px;
         }
 
@@ -109,18 +118,19 @@
             display: flex;
             justify-content: space-between;
             font-size: 12px;
+            font-weight: 600;
             margin-bottom: 4px;
         }
 
-        .summary-label { color: #555; }
-        .summary-value { font-weight: 600; color: #333; }
+        .summary-label { color: #222; font-weight: 600; }
+        .summary-value { font-weight: 700; color: #111; }
 
         .total-row {
             display: flex;
             justify-content: space-between;
             font-size: 15px;
             font-weight: 900;
-            color: #1a1a2e;
+            color: #000;
             margin: 4px 0;
         }
 
@@ -128,16 +138,17 @@
             display: flex;
             justify-content: space-between;
             font-size: 12px;
+            font-weight: 600;
             margin-bottom: 4px;
-            color: #333;
+            color: #111;
         }
 
         .change-row {
             display: flex;
             justify-content: space-between;
             font-size: 13px;
-            font-weight: 700;
-            color: #1a1a2e;
+            font-weight: 800;
+            color: #000;
         }
 
         .badge-status {
@@ -145,13 +156,14 @@
             padding: 2px 10px;
             border-radius: 10px;
             font-size: 10px;
-            font-weight: 700;
+            font-weight: 800;
         }
 
         .footer-text {
             text-align: center;
             font-size: 11px;
-            color: #888;
+            font-weight: 600;
+            color: #333;
             line-height: 1.8;
             margin-top: 8px;
         }
@@ -169,7 +181,7 @@
             border: none;
             cursor: pointer;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
             font-family: 'Inter', sans-serif;
         }
 
@@ -180,14 +192,29 @@
 
         .print-btn-ghost {
             background: #f1f5f9;
-            color: #475569;
+            color: #334155;
         }
 
         @media print {
             body { background: white; padding: 0; display: block; }
-            .receipt { box-shadow: none; width: 100%; border-radius: 0; }
+            .receipt {
+                box-shadow: none;
+                width: 100%;
+                border-radius: 0;
+                /* Paksa semua teks hitam saat print */
+                color: #000 !important;
+            }
             .receipt::before, .receipt::after { display: none; }
             .print-actions { display: none; }
+            /* Override semua warna teks menjadi hitam solid saat print */
+            .store-name, .store-tagline, .store-info,
+            .invoice-row, .invoice-row span,
+            .item-name, .item-detail, .item-detail span,
+            .summary-row, .summary-label, .summary-value,
+            .total-row, .payment-row, .payment-row span,
+            .change-row, .footer-text {
+                color: #000 !important;
+            }
         }
     </style>
 </head>
