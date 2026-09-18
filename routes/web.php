@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Auth routes
@@ -66,4 +67,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/pengaturan/metode-pembayaran', [SettingController::class, 'storePaymentMethod'])->name('settings.payment-methods.store');
     Route::patch('/pengaturan/metode-pembayaran/{paymentMethod}/toggle', [SettingController::class, 'togglePaymentMethod'])->name('settings.payment-methods.toggle');
     Route::delete('/pengaturan/metode-pembayaran/{paymentMethod}', [SettingController::class, 'destroyPaymentMethod'])->name('settings.payment-methods.destroy');
+
+    // Profil User
+    Route::get('/profil', [UserController::class, 'edit'])->name('user.edit');
+    Route::put('/profil', [UserController::class, 'update'])->name('user.update');
+    Route::put('/profil/password', [UserController::class, 'updatePassword'])->name('user.update-password');
 });
