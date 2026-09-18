@@ -22,7 +22,9 @@
     {{-- SIDEBAR --}}
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo">
-            <div class="sidebar-logo-icon">V</div>
+            <div class="sidebar-logo-icon" style="padding:0; overflow:hidden; background:transparent;">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo" style="width:100%; height:100%; object-fit:contain; border-radius:var(--radius-md);">
+            </div>
             <div class="sidebar-brand-text">
                 <div class="brand-name">{{ \App\Models\Setting::get('store_name', 'VENTRA') }}</div>
                 <div class="brand-sub">Point of Sale System</div>
