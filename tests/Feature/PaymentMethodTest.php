@@ -14,6 +14,7 @@ class PaymentMethodTest extends TestCase
     public function test_can_view_payment_methods_in_settings(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
 
         $response = $this->actingAs($user)->get(route('settings.index'));
 
@@ -25,6 +26,7 @@ class PaymentMethodTest extends TestCase
     public function test_can_add_new_payment_method(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
 
         $response = $this->actingAs($user)->post(route('settings.payment-methods.store'), [
             'name' => 'GoPay Digital',
@@ -44,6 +46,7 @@ class PaymentMethodTest extends TestCase
     public function test_can_toggle_payment_method_status(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
         $pm = PaymentMethod::where('code', 'qris')->first() ?? PaymentMethod::create([
             'name' => 'QRIS',
             'code' => 'qris',
@@ -63,6 +66,7 @@ class PaymentMethodTest extends TestCase
     public function test_cannot_delete_default_cash_payment_method(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
         $cashPm = PaymentMethod::where('code', 'cash')->first() ?? PaymentMethod::create([
             'name' => 'Tunai (Cash)',
             'code' => 'cash',

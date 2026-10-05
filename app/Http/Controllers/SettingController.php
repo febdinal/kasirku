@@ -44,6 +44,8 @@ class SettingController extends Controller
             Setting::set($key, $value, $group);
         }
 
+        auth()->user()->store->update(['name' => $validated['store_name']]);
+
         return redirect()->route('settings.index')->with('success', 'Pengaturan berhasil disimpan.');
     }
 
@@ -51,7 +53,7 @@ class SettingController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'code' => ['nullable', 'string', 'max:50', 'unique:payment_methods,code'],
+            'code' => ['nullable', 'string', 'max:50', $this->uniqueInStore('payment_methods', 'code')],
             'is_cash' => ['boolean'],
         ]);
 

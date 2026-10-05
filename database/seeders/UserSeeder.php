@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Store;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -10,7 +11,7 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
+        $user = User::updateOrCreate(
             ['email' => 'admin@ventra.com'],
             [
                 'name' => 'Admin VENTRA',
@@ -19,5 +20,11 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        $user->forceFill(['is_admin' => true])->save();
+
+        if (! $user->store) {
+            Store::createFor($user, 'VENTRA');
+        }
     }
 }

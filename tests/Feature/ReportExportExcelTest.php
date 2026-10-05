@@ -15,6 +15,7 @@ class ReportExportExcelTest extends TestCase
     public function test_can_export_daily_report_to_excel(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
         $customer = Customer::create(['name' => 'Budi Customer', 'category' => 'Loyal']);
 
         Transaction::create([
@@ -44,6 +45,7 @@ class ReportExportExcelTest extends TestCase
     public function test_can_export_weekly_report_to_excel(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
 
         $res = $this->actingAs($user)->get(route('reports.export-excel', [
             'period_type' => 'weekly',
@@ -58,6 +60,7 @@ class ReportExportExcelTest extends TestCase
     public function test_can_export_monthly_report_to_excel(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
 
         $res = $this->actingAs($user)->get(route('reports.export-excel', [
             'period_type' => 'monthly',
@@ -71,6 +74,7 @@ class ReportExportExcelTest extends TestCase
     public function test_can_export_custom_period_report_to_excel(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
 
         $res = $this->actingAs($user)->get(route('reports.export-excel', [
             'period_type' => 'custom',

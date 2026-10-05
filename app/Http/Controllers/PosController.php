@@ -54,10 +54,10 @@ class PosController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'invoice_number' => ['nullable', 'string', 'max:50', 'unique:transactions,invoice_number'],
-            'customer_id' => ['nullable', 'exists:customers,id'],
+            'invoice_number' => ['nullable', 'string', 'max:50', $this->uniqueInStore('transactions', 'invoice_number')],
+            'customer_id' => ['nullable', $this->existsInStore('customers')],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.product_id' => ['required', $this->existsInStore('products')],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.price' => ['required', 'numeric', 'min:0'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],

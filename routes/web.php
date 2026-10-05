@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
@@ -21,7 +22,7 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 // Authenticated routes
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'store'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // POS Kasir
@@ -67,9 +68,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/pengaturan/metode-pembayaran', [SettingController::class, 'storePaymentMethod'])->name('settings.payment-methods.store');
     Route::patch('/pengaturan/metode-pembayaran/{paymentMethod}/toggle', [SettingController::class, 'togglePaymentMethod'])->name('settings.payment-methods.toggle');
     Route::delete('/pengaturan/metode-pembayaran/{paymentMethod}', [SettingController::class, 'destroyPaymentMethod'])->name('settings.payment-methods.destroy');
+});
 
-    // Profil User
+// Akun (semua user yang login, termasuk admin tanpa toko)
+Route::middleware('auth')->group(function () {
     Route::get('/profil', [UserController::class, 'edit'])->name('user.edit');
     Route::put('/profil', [UserController::class, 'update'])->name('user.update');
     Route::put('/profil/password', [UserController::class, 'updatePassword'])->name('user.update-password');
+});
+
+// Admin: kelola user & toko
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('users', UserManagementController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
 });

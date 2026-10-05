@@ -43,8 +43,8 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'sku' => ['nullable', 'string', 'max:100', 'unique:products,sku'],
-            'category_id' => ['nullable', 'exists:categories,id'],
+            'sku' => ['nullable', 'string', 'max:100', $this->uniqueInStore('products', 'sku')],
+            'category_id' => ['nullable', $this->existsInStore('categories')],
             'price' => ['required', 'numeric', 'min:0'],
             'cost_price' => ['nullable', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
@@ -74,8 +74,8 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'sku' => ['nullable', 'string', 'max:100', 'unique:products,sku,'.$product->id],
-            'category_id' => ['nullable', 'exists:categories,id'],
+            'sku' => ['nullable', 'string', 'max:100', $this->uniqueInStore('products', 'sku')->ignore($product->id)],
+            'category_id' => ['nullable', $this->existsInStore('categories')],
             'price' => ['required', 'numeric', 'min:0'],
             'cost_price' => ['nullable', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],

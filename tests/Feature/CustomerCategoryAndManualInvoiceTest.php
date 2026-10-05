@@ -18,6 +18,7 @@ class CustomerCategoryAndManualInvoiceTest extends TestCase
     public function test_can_create_customer_with_preset_and_custom_category(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
 
         // Preset category: Reseller
         $res = $this->actingAs($user)->post(route('customers.store'), [
@@ -47,6 +48,7 @@ class CustomerCategoryAndManualInvoiceTest extends TestCase
     public function test_can_filter_customers_by_category(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
         Customer::create(['name' => 'Cust A', 'category' => 'Reseller']);
         Customer::create(['name' => 'Cust B', 'category' => 'Loyal']);
 
@@ -59,6 +61,7 @@ class CustomerCategoryAndManualInvoiceTest extends TestCase
     public function test_can_checkout_with_manual_invoice_number(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
         $cat = Category::create(['name' => 'Makanan', 'slug' => 'makanan']);
         $product = Product::create([
             'category_id' => $cat->id,
@@ -100,6 +103,7 @@ class CustomerCategoryAndManualInvoiceTest extends TestCase
     public function test_checkout_rejects_duplicate_manual_invoice_number(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
         $cat = Category::create(['name' => 'Makanan', 'slug' => 'makanan']);
         $product = Product::create([
             'category_id' => $cat->id,
@@ -137,6 +141,7 @@ class CustomerCategoryAndManualInvoiceTest extends TestCase
     public function test_checkout_auto_generates_invoice_when_omitted(): void
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
         $cat = Category::create(['name' => 'Makanan', 'slug' => 'makanan']);
         $product = Product::create([
             'category_id' => $cat->id,

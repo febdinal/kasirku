@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -27,6 +28,23 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * Satu user memiliki satu toko.
+     */
+    public function store(): HasOne
+    {
+        return $this->hasOne(Store::class);
+    }
+
+    /**
+     * ID toko milik user (di-cache pada instance selama request).
+     */
+    public function currentStoreId(): ?int
+    {
+        return $this->store?->id;
     }
 }

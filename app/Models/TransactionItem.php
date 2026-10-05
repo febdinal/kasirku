@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToStore;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TransactionItem extends Model
 {
+    use BelongsToStore;
+
     protected $fillable = [
         'transaction_id', 'product_id', 'product_name', 'product_sku',
         'price', 'cost_price', 'quantity', 'subtotal',
